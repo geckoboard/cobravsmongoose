@@ -40,10 +40,10 @@ class CobraVsMongoose
 
   class Parser
 
-    attr_accessor :unescape_text_in_xml_tags
+    attr_accessor :unescape_text_content
 
     def initialize(options={})
-      self.unescape_text_in_xml_tags = options.fetch(:unescape_text_in_xml_tags, true)
+      self.unescape_text_content = options.fetch(:unescape_text_content, true)
     end
 
     #
@@ -120,7 +120,7 @@ class CobraVsMongoose
           key, value = child.expanded_name, xml_node_to_hash(child, namespaces)
         when :text
           key   = "$"
-          value = unescape_text_in_xml_tags ? unescape(child.to_s).strip : child.to_s.strip
+          value = unescape_text_content ? unescape(child.to_s).strip : child.to_s.strip
 
           next if value.empty?
         end
