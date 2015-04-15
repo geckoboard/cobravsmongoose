@@ -14,6 +14,39 @@ class CobraVsMongoose
   class << self
 
     #
+    # The sort_keys class attribute is useful for testing, when a predictable order 
+    # is required in the generated XML. By setting CobraVsMongoose.sort_keys to true,
+    # hash-derived elements within a scope will be sorted by their element name, whilst
+    # attributes on an element will be sorted according to their name.
+    #
+    attr_accessor :sort_keys
+
+    def xml_to_hash(*args)
+      Parser.new.xml_to_hash(*args)
+    end
+
+    def hash_to_xml(*args)
+      Parser.new.hash_to_xml(*args)
+    end
+
+    def xml_to_json(*args)
+      Parser.new.xml_to_json(*args)
+    end
+
+    def json_to_xml(*args)
+      Parser.new.json_to_xml(*args)
+    end
+  end
+
+  class Parser
+
+    attr_accessor :unescape_text_in_xml_tags
+
+    def initialize(options={})
+      self.unescape_text_in_xml_tags = options.fetch(:unescape_text_in_xml_tags, true)
+    end
+
+    #
     # Returns a Hash corresponding to the data structure of the given XML,
     # which should be a REXML::Document or anything that responds to to_s
     # with a string of valid XML.
@@ -65,13 +98,6 @@ class CobraVsMongoose
       return hash_to_xml(JSON.parse(json))
     end
     
-    #
-    # The sort_keys class attribute is useful for testing, when a predictable order 
-    # is required in the generated XML. By setting CobraVsMongoose.sort_keys to true,
-    # hash-derived elements within a scope will be sorted by their element name, whilst
-    # attributes on an element will be sorted according to their name.
-    #
-    attr_accessor :sort_keys
   
   private
 
@@ -93,7 +119,9 @@ class CobraVsMongoose
         when :element
           key, value = child.expanded_name, xml_node_to_hash(child, namespaces)
         when :text
-          key, value = '$', child.to_s.strip
+          key   = "$"
+          value = unescape_text_in_xml_tags ? unescape(child.to_s).strip : child.to_s.strip
+
           next if value.empty?
         end
         current = this_node[key]
@@ -170,7 +198,7 @@ class CobraVsMongoose
     end
     
     def opt_order(hash)
-      return sort_keys ? hash.sort_by{ |kv| kv.first } : hash 
+      return CobraVsMongoose.sort_keys ? hash.sort_by{ |kv| kv.first } : hash 
     end
     
   end
